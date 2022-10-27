@@ -38,7 +38,7 @@ pub struct PostcodeClient {
 }
 
 /// Simple address response.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Address {
     pub street: String,
     pub house_number: u32,
@@ -47,7 +47,7 @@ pub struct Address {
 }
 
 /// Extended address response.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct ExtendedAddress {
     pub street: String,
     pub house_number: u32,
@@ -59,14 +59,14 @@ pub struct ExtendedAddress {
 }
 
 /// Coordinates of the address
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Coordinates {
     pub lat: f32,
     pub lon: f32,
 }
 
 /// Usage limits of the API, returned with every request
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct ApiLimits {
     pub ratelimit_limit: u32,
     pub ratelimit_remaining: u32,
@@ -194,7 +194,7 @@ impl IntoInternal<Address> for PostcodeApiSimpleResponse {
     fn into_internal(self, postcode: &str, house_number: u32) -> Address {
         Address {
             street: self.street,
-            house_number: house_number,
+            house_number,
             postcode: postcode.to_string(),
             city: self.city,
         }
