@@ -21,7 +21,7 @@
 //! ```
 //!
 //! # Usage Limits
-//! As of the latest release of this crate, API usage is limited to 10,000 requests per day as well as a 600 request rate limit in 30 seconds. Please do not take advantage of this free service and ruin it for everyone else. [`ApiLimits`], included with the address response, reports the API limits the last request you made. The library validates the inputs in order to avoid making requests with invalid inputs, which would count towards the usage limits.
+//! As of the latest release of this crate, API usage is limited to 10,000 requests per day as well as a 600 request rate limit in 30 seconds. Please do not take advantage of this free service and ruin it for everyone else. [`ApiLimits`], included with the address response, reports the API limits (extracted from the response headers). The library validates the inputs in order to avoid making requests with invalid inputs, which would count towards the usage limits.
 //!
 //! # Disclaimer
 //! I am not affiliated with the API provider and as such cannot make guarantees to the correctness of the results or the availability of the underlying service. Refer to <https://postcode.tech> for the service terms and conditions.
