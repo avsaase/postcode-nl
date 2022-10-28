@@ -178,7 +178,7 @@ pub enum PostcodeError {
     /// The API responded that the inputs are incorrect. This should not happen and instead [`PostcodeError::InvalidInput`] should be returned.
     #[error("API returned input is invalid")]
     InvalidData(String),
-    /// No address could be found for the given postcode and house numbr combination.
+    /// No address could be found for the given postcode and house number combination.
     #[error("Postcode not found")]
     NotFound(String),
     /// The API returned an unexpected error code.
