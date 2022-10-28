@@ -47,16 +47,13 @@ pub(crate) async fn call_api(
         .map_err(|e| PostcodeError::NoApiResponse(format!("Error contacting API, {e}")))?;
 
     match response.status() {
-        StatusCode::NOT_FOUND => {
-            return Err(PostcodeError::NotFound(format!(
-                "No result for postcode {} and house number {}",
-                postcode, house_number
-            )))
-        }
         StatusCode::OK => (),
+        StatusCode::NOT_FOUND => (),
+        StatusCode::TOO_MANY_REQUESTS => return Err(PostcodeError::TooManyRequests("API limits exceeded".to_string())),
         _ => {
             return Err(PostcodeError::OtherApiError(format!(
-                "Received error from API, {}",
+                "Received error from API, code: {}, {}",
+                response.status(),
                 response.text().await.unwrap()
             )))
         }
