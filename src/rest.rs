@@ -48,7 +48,7 @@ pub(crate) async fn call_api(
 
     match response.status() {
         StatusCode::OK => (),
-        StatusCode::NOT_FOUND => (),
+        StatusCode::NOT_FOUND => (), // This is not an error, it just means the address was not found
         StatusCode::TOO_MANY_REQUESTS => return Err(PostcodeError::TooManyRequests("API limits exceeded".to_string())),
         _ => {
             return Err(PostcodeError::OtherApiError(format!(
@@ -99,7 +99,7 @@ fn extract_header_string(headers: &HeaderMap, header_key: &str) -> Result<String
         .get(header_key)
         .ok_or_else(|| PostcodeError::InvalidApiResponse("API did not return API limits".to_string()))?
         .to_str()
-        .map_err(|_e| PostcodeError::InvalidApiResponse("Failed to parse API rate limit from header".to_string()))?
+        .map_err(|_e| PostcodeError::InvalidApiResponse("Failed to parse API reset frequency from header".to_string()))?
         .to_string();
 
     Ok(value)
