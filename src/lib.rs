@@ -1,6 +1,6 @@
 //! Async client for the free Netherlands postcode API at <https://postcode.tech>.
 //!
-//! There are two methods, one to find the street and city matching the supplied postcode and house number, and one that also returns the municipality, province and coordinates. If no address can be found for the postcode and house number combination, `None` is returned.
+//! There are two methods, one to find the street and city matching the supplied postcode and house number, and one that also includes the municipality, province and coordinates. If no address can be found for the postcode and house number combination, `None` is returned.
 //!
 //! # Example
 //! ```rust,no_run
@@ -9,7 +9,7 @@
 //! # #[tokio::main]
 //! # async fn main() -> Result<(), Box<dyn Error>> {
 //! // Initialize a client
-//! let client = PostcodeClient::new("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+//! let client = PostcodeClient::new("YOUR_API_TOKEN");
 //!
 //! // Find the address matching on a postcode and house number
 //! let (address, limits) = client.get_address("1012RJ", 147).await?;
@@ -21,17 +21,17 @@
 //! ```
 //!
 //! # Usage Limits
-//! As of the latest release of this crate, API usage is limited to 10,000 requests per day as well as a 600 requests per 30 seconds. Please do not misuse of this free service and ruin it for everyone else. [`ApiLimits`], included with the address response, reports the API limits (extracted from the response headers). The library validates the inputs in order to avoid making requests with invalid inputs, which would count towards the usage limits.
+//! As of the latest release of this crate, API usage is limited to 10,000 requests per day as well as 600 requests per 30 seconds. Please do not abuse this free service and ruin it for everyone else. [`ApiLimits`], included with the address response as shown above, reports the API limits (extracted from the response headers). The library validates the inputs in order to avoid making requests with invalid inputs, which would count towards the usage limits.
 //!
 //! # Disclaimer
 //! I am not affiliated with the API provider and as such cannot make guarantees to the correctness of the results or the availability of the underlying service. Refer to <https://postcode.tech> for the service terms and conditions.
 
+use internals::{call_api, IntoInternal, PostcodeApiFullResponse, PostcodeApiSimpleResponse};
 use regex::Regex;
 use reqwest::{Client, StatusCode};
-use rest::{call_api, Geo, PostcodeApiFullResponse, PostcodeApiSimpleResponse};
 use thiserror::Error;
 
-mod rest;
+mod internals;
 
 /// The client that calls the API.
 pub struct PostcodeClient {
@@ -83,7 +83,7 @@ impl PostcodeClient {
     /// # use std::error::Error;
     /// # use postcode_nl::*;
     /// # fn main()  {
-    /// let client = PostcodeClient::new("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+    /// let client = PostcodeClient::new("YOUR_API_TOKEN");
     /// # }
     /// ```
     pub fn new(api_token: &str) -> Self {
@@ -95,13 +95,13 @@ impl PostcodeClient {
         }
     }
 
-    /// Find the address matching the given postcode and house number. Postcodes are formatted 1234AB or 1234 AB (with a single space). House numbers must be integers and not include postfix characters. Returns `None` instead of the address when the address could not be found.
+    /// Find the address matching the given postcode and house number. Postcodes are formatted 1234AB or 1234 AB (with a single space). House numbers must be integers and not include postfix characters. Returns `None` when the address could not be found.
     /// ```rust,no_run
     /// # use std::error::Error;
     /// # use postcode_nl::*;
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn Error>> {
-    /// # let client: PostcodeClient = PostcodeClient::new("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+    /// # let client: PostcodeClient = PostcodeClient::new("YOUR_API_TOKEN");
     /// let (address, limits) = client.get_address("1012RJ", 147).await?;
     /// # Ok(())
     /// # }
@@ -133,7 +133,7 @@ impl PostcodeClient {
         Ok((address, limits))
     }
 
-    /// Find the address, municipality, province and coordinates matching the given postcode and house number. Postcodes are formatted 1234AB or 1234 AB (with a single space). House numbers must be integers and not include postfix characters. Returns `None` instead of the address when the address could not be found.
+    /// Find the address, municipality, province and coordinates matching the given postcode and house number. Postcodes are formatted 1234AB or 1234 AB (with a single space). House numbers must be integers and not include postfix characters. Returns `None` when the address could not be found.
     /// ```rust,no_run
     /// # use std::error::Error;
     /// # use postcode_nl::*;
@@ -196,47 +196,12 @@ pub enum PostcodeError {
     #[error("Failed to parse API response")]
     InvalidApiResponse(String),
     /// The API responded that the inputs are incorrect. This should not happen and instead [`PostcodeError::InvalidInput`] should be returned.
-    #[error("API returned input is invalid")]
+    #[error("API returned that inputs are invalid")]
     InvalidData(String),
-    /// The API responded with 429 TOO MANY REQUESTS. You've exceeded the API limits. Please limit your usage to avoid getting the service shut down.
+    /// The API responded with 429 TOO MANY REQUESTS. You've exceeded the API limits.
     #[error("API limits exceeded")]
     TooManyRequests(String),
     /// The API returned an unexpected error code.
     #[error("API returned an error")]
     OtherApiError(String),
-}
-
-pub(crate) trait IntoInternal<T> {
-    fn into_internal(self, postcode: &str, house_number: u32) -> T;
-}
-
-impl IntoInternal<Address> for PostcodeApiSimpleResponse {
-    fn into_internal(self, postcode: &str, house_number: u32) -> Address {
-        Address {
-            street: self.street,
-            house_number,
-            postcode: postcode.to_string(),
-            city: self.city,
-        }
-    }
-}
-
-impl From<PostcodeApiFullResponse> for ExtendedAddress {
-    fn from(p: PostcodeApiFullResponse) -> Self {
-        Self {
-            street: p.street,
-            house_number: p.number,
-            postcode: p.postcode,
-            city: p.city,
-            municipality: p.municipality,
-            province: p.province,
-            coordinates: p.geo.into(),
-        }
-    }
-}
-
-impl From<Geo> for Coordinates {
-    fn from(g: Geo) -> Self {
-        Self { lat: g.lat, lon: g.lon }
-    }
 }

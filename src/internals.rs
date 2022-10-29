@@ -1,7 +1,7 @@
 use reqwest::{header::HeaderMap, Client, Response, StatusCode, Url};
 use serde::Deserialize;
 
-use crate::{ApiLimits, PostcodeError};
+use crate::{Address, ApiLimits, Coordinates, ExtendedAddress, PostcodeError};
 
 pub const API_URL_SIMPLE: &str = "https://postcode.tech/api/v1/postcode";
 pub const API_URL_FULL: &str = "https://postcode.tech/api/v1/postcode/full";
@@ -103,4 +103,39 @@ fn extract_header_string(headers: &HeaderMap, header_key: &str) -> Result<String
         .to_string();
 
     Ok(value)
+}
+
+pub(crate) trait IntoInternal<T> {
+    fn into_internal(self, postcode: &str, house_number: u32) -> T;
+}
+
+impl IntoInternal<Address> for PostcodeApiSimpleResponse {
+    fn into_internal(self, postcode: &str, house_number: u32) -> Address {
+        Address {
+            street: self.street,
+            house_number,
+            postcode: postcode.to_string(),
+            city: self.city,
+        }
+    }
+}
+
+impl From<PostcodeApiFullResponse> for ExtendedAddress {
+    fn from(p: PostcodeApiFullResponse) -> Self {
+        Self {
+            street: p.street,
+            house_number: p.number,
+            postcode: p.postcode,
+            city: p.city,
+            municipality: p.municipality,
+            province: p.province,
+            coordinates: p.geo.into(),
+        }
+    }
+}
+
+impl From<Geo> for Coordinates {
+    fn from(g: Geo) -> Self {
+        Self { lat: g.lat, lon: g.lon }
+    }
 }
