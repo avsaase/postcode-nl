@@ -1,12 +1,12 @@
 [package]
 name = "postcode-nl"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 authors = ["Alexander van Saase <avsaase at gmail dot com>"]
 repository = "https://github.com/avsaase/postcode-nl"
 readme = "README.md"
-# documentation = "https://docs.rs/postcode-nl"
+documentation = "https://docs.rs/postcode-nl"
 keywords = ["postcode", "netherlands"]
 description = "Async client for the free Netherlands postcode API at https://postcode.tech"
 
